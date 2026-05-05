@@ -62,9 +62,13 @@ public class TextEditor extends JFrame implements ActionListener {
         // Format Menu
         JMenu formatMenu = new JMenu("Format");
         JMenuItem font = new JMenuItem("Font");
+        JMenuItem color = new JMenuItem("Font Color");
+
 
         font.addActionListener(this);
+        color.addActionListener(this);
         formatMenu.add(font);
+        formatMenu.add(color);
 
         // Add menus to bar
         menuBar.add(fileMenu);
@@ -80,6 +84,65 @@ public class TextEditor extends JFrame implements ActionListener {
 
         setVisible(true);
     }
+
+private void showFontDialog() {
+    JDialog dialog = new JDialog(this, "Font", true);
+    dialog.setSize(350, 250);
+    dialog.setLayout(new GridLayout(0, 2, 5, 5));
+
+    // Components
+    JComboBox<String> fontBox = new JComboBox<>(
+        GraphicsEnvironment.getLocalGraphicsEnvironment()
+        .getAvailableFontFamilyNames()
+    );
+
+    JComboBox<String> styleBox = new JComboBox<>(new String[]{"Plain", "Bold", "Italic"});
+    JComboBox<Integer> sizeBox = new JComboBox<>(new Integer[]{12, 14, 16, 18, 20, 24});
+
+    JLabel preview = new JLabel("Sample Text", JLabel.CENTER);
+
+    JButton apply = new JButton("Apply");
+    JButton cancel = new JButton("Cancel");
+
+    // Common preview updater (single lambda)
+    ActionListener update = e -> {
+        preview.setFont(new Font(
+            (String) fontBox.getSelectedItem(),
+            styleBox.getSelectedIndex(),
+            (Integer) sizeBox.getSelectedItem()
+        ));
+    };
+
+    fontBox.addActionListener(update);
+    styleBox.addActionListener(update);
+    sizeBox.addActionListener(update);
+
+    // Apply action
+    apply.addActionListener(e -> {
+        textArea.setFont(preview.getFont());
+        dialog.dispose();
+    });
+
+    cancel.addActionListener(e -> dialog.dispose());
+
+    // Add components (compact)
+    dialog.add(new JLabel("Font")); dialog.add(fontBox);
+    dialog.add(new JLabel("Style")); dialog.add(styleBox);
+    dialog.add(new JLabel("Size")); dialog.add(sizeBox);
+    dialog.add(preview);
+    dialog.add(apply); dialog.add(cancel);
+
+    dialog.setLocationRelativeTo(this);
+    dialog.setVisible(true);
+}
+
+private void changeFontColor() {
+    Color color = JColorChooser.showDialog(this, "Choose Font Color", Color.BLACK);
+
+    if (color != null) {
+        textArea.setForeground(color);
+    }
+}
 
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
@@ -128,15 +191,11 @@ public class TextEditor extends JFrame implements ActionListener {
                 break;
 
             case "Font":
-                String fontName = JOptionPane.showInputDialog(this, "Enter Font Name (e.g., Arial):");
-                String sizeStr = JOptionPane.showInputDialog(this, "Enter Font Size:");
-
-                try {
-                    int size = Integer.parseInt(sizeStr);
-                    textArea.setFont(new Font(fontName, Font.PLAIN, size));
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "Invalid font size");
-                }
+                showFontDialog();
+                break;
+            
+            case "Font Color":
+                changeFontColor();
                 break;
         }
     }
